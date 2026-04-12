@@ -1,3 +1,11 @@
+---
+name: project-bootstrap
+description: Transform requirements into architecture docs and task breakdowns. Use when starting a new software project from requirements, brainstorm notes, or rough descriptions. Produces docs/ARCHITECTURE.md and docs/TASKS.md.
+version: 1.0.0
+argument-hint: [requirements-file]
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash]
+---
+
 # Skill: Project Bootstrap
 
 ## Purpose

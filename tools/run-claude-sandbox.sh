@@ -86,6 +86,7 @@ die()     { error "$1"; exit 1; }
 
 # ── Argument parsing ───────────────────────────────────────────────────────────
 ISOLATED=false
+HOST_NETWORK=false
 MODE="interactive"
 TASK=""
 TASK_FILE=""
@@ -100,6 +101,10 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --isolated)
             ISOLATED=true
+            shift
+            ;;
+        --host-network)
+            HOST_NETWORK=true
             shift
             ;;
         --task)
@@ -316,7 +321,10 @@ fi
 # ── Network configuration ──────────────────────────────────────────────────────
 NETWORK_ARGS=()
 
-if [ "$ISOLATED" = true ]; then
+if [ "$HOST_NETWORK" = true ]; then
+    NETWORK_ARGS+=(--network host)
+    info "Host network mode: full host network access"
+elif [ "$ISOLATED" = true ]; then
     COMPOSE_NETWORK="${PODMAN_PROJECT}_default"
     if ! podman network exists "$COMPOSE_NETWORK" 2>/dev/null; then
         die "Network '$COMPOSE_NETWORK' not found. Run 'make services-run' in this worktree first."
@@ -325,8 +333,8 @@ if [ "$ISOLATED" = true ]; then
     info "Isolated mode: connected to network '$COMPOSE_NETWORK'"
     info "  Services reachable by container name on this network"
 else
-    NETWORK_ARGS+=(--network host)
-    info "Unrestricted mode: host network access (ports sourced from .env)"
+    NETWORK_ARGS+=(--network none)
+    info "Default mode: no network access (use --host-network for host access)"
 fi
 
 # ── Determine container command ────────────────────────────────────────────────
@@ -448,6 +456,13 @@ podman run \
     `# Security: drop all capabilities, no privilege escalation` \
     --cap-drop ALL \
     --security-opt no-new-privileges \
+    \
+    `# Process limit` \
+    --pids-limit 256 \
+    \
+    `# Read-only root filesystem with writable tmp` \
+    --read-only \
+    --tmpfs /tmp:size=100m \
     \
     `# Network` \
     "${NETWORK_ARGS[@]}" \

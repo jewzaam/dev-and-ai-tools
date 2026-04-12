@@ -1,0 +1,8 @@
+{
+  "name": "agentic-orchestrator",
+  "version": "0.1.0",
+  "description": "Multi-agent orchestration for automated software development with quality gates. Provides project-bootstrap, agentic-scaffold, and agentic-loop skills with configurable TDD/standard workflows, review integration, and judge-gated quality enforcement.",
+  "author": {
+    "name": "Naveen Malik"
+  }
+}

@@ -1,3 +1,11 @@
+---
+name: agentic-scaffold
+description: Convert ARCHITECTURE.md + TASKS.md into executable agentic workflow. Use after project-bootstrap produces approved docs. Creates task specs, TASK_LIST.md, personas, and loop.sh.
+version: 1.0.0
+argument-hint: <tasks-file> <architecture-file>
+allowed-tools: [Read, Write, Edit, Bash, Glob]
+---
+
 # Skill: Agentic Scaffold
 
 ## Purpose
@@ -69,64 +77,25 @@ Rules:
 Copy the template from `.claude/templates/TASK_LIST.md`.
 
 Replace the example task entries with real entries from {tasks_file}.
-Every task gets exactly four entries in this order: DEV, TEST, VERIFY, JUDGE.
+The entry format depends on the workflow mode in `orchestrator.yaml`.
 
-Entry format (copy this pattern exactly for every task):
+**Read `orchestrator.yaml`** (copied in Step 5) to determine workflow mode.
+Default: `test_first = true`.
 
-```markdown
-## Task {id} — {title}
+**TDD mode** (`test_first = true`) — each task gets entries in this order:
+TEST, DEV, REVIEW, JUDGE, VERIFY
 
-- [ ] **DEV** — `persona: tasks/personas/developer.md` — attempt 1 of 3
-  Read spec: `tasks/specs/task-{id}.md`
-  If retrying, read feedback: _(none yet)_
-  Implement the task. When done:
-  - Run `git add -A && git commit -m "dev: task {id}"`
-  - Check this box
-  - Set cursor to: `→ NEXT: Task {id} — TEST`
+**Standard mode** (`test_first = false`) — each task gets entries in this order:
+DEV, REVIEW, JUDGE, TEST, VERIFY
 
-- [ ] **TEST** — `persona: tasks/personas/test_writer.md` — attempt 1 of 3
-  Read spec: `tasks/specs/task-{id}.md`
-  Read the diff: `git diff HEAD~1`
-  Write tests for what the developer just built. When done:
-  - Run `git add -A && git commit -m "test: task {id}"`
-  - Check this box
-  - Set cursor to: `→ NEXT: Task {id} — VERIFY`
+Use the entry patterns from `.claude/templates/TASK_LIST.md` for the selected mode.
+Substitute task IDs, titles, verify commands, and cursor targets for each task.
 
-- [ ] **VERIFY** — attempt 1 of 3
-  Run: `{verify_command} 2>&1 | tee tasks/feedback/task-{id}-verify.txt`
-  If exit code 0 (tests pass):
-  - Check this box
-  - Set cursor to: `→ NEXT: Task {id} — JUDGE`
-  If exit code non-zero (tests fail):
-  - Do NOT check this box
-  - Uncheck DEV and TEST above (they must be redone)
-  - Increment attempt numbers on DEV, TEST, VERIFY by 1
-  - If attempt number would exceed 3: replace checkbox with `[BLOCKED]` and stop
-  - Set cursor to: `→ NEXT: Task {id} — DEV`
-
-- [ ] **JUDGE** — `persona: tasks/personas/judge.md` — attempt 1 of 3
-  Read spec: `tasks/specs/task-{id}.md`
-  Read diff: `git diff HEAD~2` (covers dev + test commits)
-  Read verify output: `tasks/feedback/task-{id}-verify.txt`
-  Write verdict to: `tasks/feedback/task-{id}-judge.md`
-  Then read the verdict and act on it:
-
-  If verdict is PASS or PASS_WITH_CONCERNS:
-  - Check this box
-  - Set cursor to: `→ NEXT: Task {next_id} — DEV`
-
-  If verdict is FAIL:
-  - Do NOT check this box
-  - Uncheck DEV, TEST, VERIFY above
-  - Increment attempt numbers on DEV, TEST, VERIFY, JUDGE by 1
-  - If any attempt number would exceed 3: replace checkbox with `[BLOCKED]` and stop
-  - Update the feedback reference on DEV: replace `_(none yet)_` with path to verdict file
-  - Set cursor to: `→ NEXT: Task {id} — DEV`
-
-  Feedback for DEV on retry: _(none yet)_
-
----
-```
+The key differences from the old format:
+- REVIEW stage added between DEV and JUDGE
+- In TDD mode, TEST runs before DEV
+- JUDGE now reads `tasks/feedback/Review-task-{id}.md` and appends to `tasks/FEEDBACK.md`
+- JUDGE uses `mandated_fixes` in its verdict to specify what DEV must fix on retry
 
 VERIFY command by scope:
 - `backend`: `cd backend && python -m pytest -v`
@@ -137,9 +106,11 @@ Note: for `both`, adjust the tee command so output from both test runs
 goes to the same verify file.
 
 Cursor rules:
-- Each task's JUDGE PASS cursor points to the next task's DEV entry
-- The very last task's JUDGE PASS cursor points to: `→ NEXT: FINAL JUDGE`
-- The initial `→ NEXT:` cursor at the top of the file points to the first task DEV
+- Each task's VERIFY PASS cursor points to the next task's first stage entry
+  (TEST in TDD mode, DEV in standard mode)
+- The very last task's VERIFY PASS cursor points to: `→ NEXT: FINAL JUDGE`
+- The initial `→ NEXT:` cursor at the top of the file points to the first task's
+  first stage (TEST in TDD mode, DEV in standard mode)
 
 The FINAL JUDGE entry is already in the template — do not modify it.
 Insert all task entries between the header and the FINAL JUDGE section.
@@ -148,9 +119,10 @@ Insert all task entries between the header and the FINAL JUDGE section.
 
 ### Step 4 — Persona Files
 
-Copy the three persona files verbatim from templates:
+Copy the four persona files verbatim from templates:
 - `.claude/personas/developer.md` → `tasks/personas/developer.md`
 - `.claude/personas/test_writer.md` → `tasks/personas/test_writer.md`
+- `.claude/personas/reviewer.md` → `tasks/personas/reviewer.md`
 - `.claude/personas/judge.md` → `tasks/personas/judge.md`
 
 Do not modify persona file content.
@@ -163,6 +135,7 @@ Copy these files verbatim:
 - `.claude/templates/RUN.md` → `tasks/RUN.md`
 - `.claude/templates/BUILD_STATUS.md` → `tasks/BUILD_STATUS.md`
 - `.claude/templates/loop.sh` → `loop.sh`
+- `.claude/templates/orchestrator.yaml` → `orchestrator.yaml`
 
 Make loop.sh executable:
 ```bash
@@ -179,7 +152,8 @@ Produce `tasks/ARCHITECTURE_REF.md` — a condensed version of
 Rules:
 - Maximum 200 lines
 - Include: tech stack table, file/directory layout, key patterns and
-  conventions, naming conventions, existing helpers to reuse
+  conventions, naming conventions, existing helpers to reuse,
+  orchestrator.yaml settings that affect agent behavior
 - Exclude: rationale prose, out of scope sections, lengthy descriptions
 - Every agent invocation will read this file — keep it dense and useful,
   not comprehensive
@@ -193,9 +167,10 @@ Rules:
 3. Count task sections in tasks/TASK_LIST.md (excluding FINAL JUDGE)
 4. Confirm all three counts match
 5. Confirm the last task JUDGE PASS cursor points to FINAL JUDGE
-6. Confirm tasks/personas/ has developer.md, test_writer.md, judge.md
+6. Confirm tasks/personas/ has developer.md, test_writer.md, reviewer.md, judge.md
 7. Confirm loop.sh is executable
-8. Print output summary
+8. Confirm orchestrator.yaml exists
+9. Print output summary
 
 ## Output Summary Format
 
@@ -204,7 +179,8 @@ Rules:
 
 Specs:          tasks/specs/          ({n} files)
 Task list:      tasks/TASK_LIST.md    ({n} tasks)
-Personas:       tasks/personas/       (developer, test_writer, judge)
+Personas:       tasks/personas/       (developer, test_writer, reviewer, judge)
+Config:         orchestrator.yaml
 Arch ref:       tasks/ARCHITECTURE_REF.md
 Execution:      tasks/RUN.md, tasks/BUILD_STATUS.md, loop.sh
 
@@ -215,10 +191,23 @@ To run automatically until complete or blocked:
   ./loop.sh
 ```
 
+### Step 8 — Transient Artifact Gitignore
+
+Write `tasks/.gitignore`:
+```
+*
+```
+
+This prevents task artifacts from being committed to the project repository.
+The agentic workflow files are transient — they exist only during the build.
+
+---
+
 ## Quality Rules
 
 - All task IDs must be consistent across TASKS.md, specs/, and TASK_LIST.md
 - The TASK_LIST.md cursor chain must be unbroken from first task to FINAL JUDGE
 - No task entry may reference a spec file that doesn't exist
+- Persona files must include reviewer.md in addition to developer, test_writer, judge
 - Persona files must not be modified from the templates
-- loop.sh and RUN.md must not be modified from the templates
+- loop.sh, RUN.md, and orchestrator.yaml must not be modified from the templates

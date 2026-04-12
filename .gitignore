@@ -1,3 +1,7 @@
-tasks/
 .env
 text.txt
+
+.claude/settings.local.json
+
+# Agentic orchestrator transient artifacts
+tasks/

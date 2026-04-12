@@ -4,10 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-This is a development and AI tools repository containing:
+This repository is packaged as the **agentic-orchestrator** Claude Code plugin (`.claude-plugin/plugin.json`). It contains:
 - **Claude Code Sandbox**: A Podman-based isolated execution environment for running Claude Code safely
-- **Agentic Task Orchestration**: A multi-agent workflow system (Developer → Test Writer → Judge) for automated software development
+- **Agentic Task Orchestration**: A multi-agent workflow system with configurable TDD/standard modes
 - **Project Bootstrap Skills**: Custom skills for scaffolding and managing AI-assisted development workflows
+
+### Plugin Structure
+
+The plugin bundles skills, personas, templates, and container tooling:
+- `.claude-plugin/plugin.json` — Plugin manifest (name, version, author)
+- `.claude/skills/` — Three skills: project-bootstrap, agentic-scaffold, agentic-loop
+- `.claude/personas/` — Four personas: developer, test_writer, reviewer, judge
+- `.claude/templates/` — Templates copied per-project by agentic-scaffold
+- `tools/` — Sandbox script and validation script
+- `containers/` — Hardened Containerfile for Podman
 
 ## Architecture Overview
 
@@ -23,11 +33,20 @@ The repository provides `tools/run-claude-sandbox.sh`, a wrapper script that:
 
 ### Agentic Workflow System
 
-Tasks flow through a four-stage cycle:
-1. **DEV** (Developer persona) — Implements the task spec
-2. **TEST** (Test Writer persona) — Writes tests for the implementation
-3. **VERIFY** — Runs test suite to confirm functionality
-4. **JUDGE** (Judge persona) — Reviews code quality and decides PASS/FAIL
+Tasks flow through a configurable cycle controlled by `orchestrator.yaml`:
+
+**TDD mode** (`test_first: true`, default):
+TEST → DEV → REVIEW → JUDGE → VERIFY
+
+**Standard mode** (`test_first: false`):
+DEV → REVIEW → JUDGE → TEST → VERIFY
+
+Personas:
+1. **DEV** (Developer) — Implements the task spec; in TDD mode, makes tests pass
+2. **TEST** (Test Writer) — Writes tests; in TDD mode, writes them before implementation
+3. **REVIEW** (Reviewer) — Reviews code and produces findings for the Judge to triage
+4. **JUDGE** (Judge) — Scores on 6 dimensions, produces `mandated_fixes`, collects feedback
+5. **VERIFY** — Runs test suite to confirm functionality
 
 Tasks are defined in:
 - `tasks/specs/task-{id}.md` — Individual task specifications
@@ -40,9 +59,10 @@ The `loop.sh` script runs `tools/run-claude-sandbox.sh --task-file tasks/RUN.md`
 ### Persona System
 
 Each stage uses a different persona file that defines the agent's role, mandate, and constraints:
-- `tasks/personas/developer.md` — Focus on implementing exactly what's in the spec, no more/less
-- `tasks/personas/test_writer.md` — Adversarial testing to find gaps the developer missed
-- `tasks/personas/judge.md` — Gatekeeping role that scores implementations on 5 dimensions and blocks low-quality work
+- `tasks/personas/developer.md` — Implements exactly what's in the spec; reads `orchestrator.yaml` for standards fallback; supports TDD mode
+- `tasks/personas/test_writer.md` — Adversarial testing; in TDD mode writes tests before code exists against ARCHITECTURE_REF.md interfaces
+- `tasks/personas/reviewer.md` — Produces numbered findings (CR/IM/SG) for the Judge to triage; does NOT fix code
+- `tasks/personas/judge.md` — Scores on 6 dimensions (added Complexity), produces `mandated_fixes` list, runs xenon if available, appends to `tasks/FEEDBACK.md`
 
 ## Key Commands
 
@@ -76,8 +96,11 @@ tools/run-claude-sandbox.sh --resume
 
 **Network isolation**:
 ```bash
-# Unrestricted (default) — can reach localhost:8000, localhost:5432, etc:
+# No network (default) — fully isolated:
 tools/run-claude-sandbox.sh --task "..."
+
+# Host network — can reach localhost:8000, localhost:5432, etc:
+tools/run-claude-sandbox.sh --host-network --task "..."
 
 # Isolated — can only reach project's podman-compose services:
 tools/run-claude-sandbox.sh --isolated --task "..."
@@ -170,32 +193,44 @@ tools/run-claude-sandbox.sh --task "Read .claude/skills/agentic-scaffold/SKILL.m
 ## File Structure
 
 ```
+.claude-plugin/
+  plugin.json          # Plugin manifest (name, version, author)
+
 .claude/
-  personas/          # Template persona files (copied to tasks/personas/)
-    developer.md
-    judge.md
-    test_writer.md
-  skills/            # Custom Claude Code skills
-    agentic-scaffold/
-    deploy-update/
-    project-bootstrap/
-  templates/         # Templates for agentic workflow
+  personas/            # Template persona files (copied to tasks/personas/)
+    developer.md       # Standards fallback, TDD mode, commit skill
+    judge.md           # 6-dimension scoring, mandated_fixes, complexity, feedback
+    reviewer.md        # Produces findings for judge to triage
+    test_writer.md     # TDD mode: writes tests before implementation
+  skills/              # Custom Claude Code skills
+    agentic-loop/      # Run the orchestration loop
+    agentic-scaffold/  # Generate task infrastructure from ARCHITECTURE + TASKS
+    project-bootstrap/ # Generate ARCHITECTURE + TASKS from requirements
+  templates/           # Templates copied per-project by agentic-scaffold
     BUILD_STATUS.md
     RUN.md
-    TASK_LIST.md
-    loop.sh
-  settings.local.json  # Claude settings (MCP servers)
+    TASK_LIST.md       # Supports TDD and standard workflow modes
+    loop.sh            # Per-stage model routing from orchestrator.yaml
+    orchestrator.yaml  # Per-project workflow configuration
 
 containers/
   claude-sandbox/
-    Containerfile    # Container definition for sandboxed Claude environment
+    Containerfile      # Hardened container (read-only, pids-limit, no network)
 
 tools/
-  run-claude-sandbox.sh  # Main wrapper script for running Claude in Podman
-  README.md             # Detailed documentation for the sandbox
-
-loop.sh              # Automated build loop (runs RUN.md until approved/blocked)
+  run-claude-sandbox.sh      # Podman sandbox wrapper
+  validate-loop-prereqs.sh   # Prereq validation for agentic-loop skill
+  README.md
 ```
+
+## Dependencies
+
+**Required:**
+- [Podman](https://podman.io/) — Container runtime for the sandbox
+- [review skill](https://github.com/jewzaam/claude-skill-review) — Code review skill used by the Reviewer persona (`/review`). Install from the repo.
+
+**Optional:**
+- [xenon](https://pypi.org/project/xenon/) — Cyclomatic complexity checking. Judge falls back to lines-of-code checks if not installed.
 
 ## Configuration
 
