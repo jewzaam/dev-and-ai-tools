@@ -68,7 +68,7 @@ while true; do
   echo "════════════════════════════════════════════════"
   echo ""
 
-  SANDBOX_CMD=(tools/run-claude-sandbox.sh --task-file tasks/RUN.md --model "$STAGE_MODEL")
+  SANDBOX_CMD=(tools/run-claude-sandbox.sh --host-network --task-file tasks/RUN.md --model "$STAGE_MODEL")
 
   "${SANDBOX_CMD[@]}" </dev/null || true
 

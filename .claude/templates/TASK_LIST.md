@@ -65,8 +65,8 @@ Configuration: `orchestrator.yaml`
 - [ ] **REVIEW** — `persona: tasks/personas/reviewer.md` — attempt 1 of 3
   Read spec: `tasks/specs/task-0.1.md`
   Read the diff: `git diff HEAD~1`
-  Run review, apply-review, and simplify skills (or manual review if unavailable).
-  Write review to: `tasks/feedback/Review-task-0.1.md`
+  Run /review skill (or manual review if unavailable).
+  Copy review output to: `tasks/feedback/`
   When done:
   - Run `git add -A && git commit -m "review: task 0.1"`
   - Check this box
