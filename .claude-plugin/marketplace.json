@@ -1,8 +1,28 @@
 {
+  "name": "jewzaam-dev-and-ai-tools",
+  "owner": {
+    "name": "Naveen Malik"
+  },
+  "metadata": {
+    "description": "Multi-agent orchestration for automated software development with quality gates."
+  },
   "plugins": [
     {
       "name": "agentic-orchestrator",
-      "path": "."
+      "source": {
+        "source": "github",
+        "repo": "jewzaam/dev-and-ai-tools"
+      },
+      "description": "Project bootstrap, agentic scaffold, and agentic loop skills with configurable TDD/standard workflows, review integration, and judge-gated quality enforcement.",
+      "version": "0.1.0",
+      "author": {
+        "name": "AaronH88"
+      },
+      "contributors": [
+        {
+          "name": "Naveen Malik"
+        }
+      ]
     }
   ]
 }
