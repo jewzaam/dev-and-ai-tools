@@ -433,6 +433,19 @@ if [ "$MODE" = "interactive" ] || [ "$MODE" = "agentic" ]; then
 fi
 
 # ── Run ────────────────────────────────────────────────────────────────────────
+# Git Bash (MSYS) on Windows rewrites forward-slash paths in command arguments
+# to Windows paths, which breaks container-side paths like /workspace,
+# /home/node/.claude, and /tmp. We must disable this conversion, but Podman
+# still needs Windows-format paths for host-side arguments (volume sources,
+# --env-file). Convert host paths before disabling MSYS conversion.
+if command -v cygpath &>/dev/null; then
+    WORKTREE_ROOT="$(cygpath -w "$WORKTREE_ROOT")"
+    AUTH_DIR="$(cygpath -w "$AUTH_DIR")"
+    ENV_FILE="$(cygpath -w "$ENV_FILE")"
+    export MSYS_NO_PATHCONV=1
+    export MSYS2_ARG_CONV_EXCL="*"
+fi
+
 podman run \
     --rm \
     ${INTERACTIVE_FLAG:+--interactive} \
@@ -460,9 +473,12 @@ podman run \
     `# Process limit` \
     --pids-limit 256 \
     \
-    `# Read-only root filesystem with writable tmp` \
-    --read-only \
-    --tmpfs /tmp:size=100m \
+    `# NOTE: --read-only is intentionally omitted. Claude Code writes to` \
+    `# unpredictable locations under /home/node/ (.claude.json, .config/, .local/)` \
+    `# and Podman on Windows does not support uid/gid tmpfs options to make` \
+    `# targeted tmpfs mounts writable by the node user. The remaining controls` \
+    `# (cap-drop ALL, no-new-privileges, --rm, volume-limited host access)` \
+    `# provide sufficient isolation. See docs/how-it-works.md for details.` \
     \
     `# Network` \
     "${NETWORK_ARGS[@]}" \

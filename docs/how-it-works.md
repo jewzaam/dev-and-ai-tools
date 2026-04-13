@@ -314,10 +314,38 @@ Each stage runs inside a hardened Podman container. The container is the securit
 |---------|---------|
 | Capabilities | `--cap-drop ALL` |
 | Privilege escalation | `--security-opt no-new-privileges` |
-| Filesystem | `--read-only` with `--tmpfs /tmp:size=100m` |
 | Processes | `--pids-limit 256` |
 | Network | `--network none` default; `loop.sh` passes `--host-network` for API access |
 | Volumes | Worktree (rw) + auth tokens (rw) only |
+| Container lifecycle | `--rm` (ephemeral, no state persists in the container) |
+
+### Why no `--read-only` filesystem?
+
+The original design used `--read-only` with targeted `--tmpfs` mounts for directories
+Claude Code needs to write to (`/tmp`, `/home/node/.config`, `/home/node/.local`). This
+worked on Linux but failed on Windows (Podman for Windows) due to two issues:
+
+1. **Claude Code writes to unpredictable locations.** Beyond the expected XDG directories,
+   it writes `/home/node/.claude.json` directly in the home directory, and future versions
+   may add more. Maintaining a whitelist of tmpfs mounts is fragile.
+2. **Podman on Windows doesn't support `uid`/`gid` tmpfs options.** Without these, tmpfs
+   mounts are root-owned and the `node` user (uid 1000) gets `EACCES` errors. The `mode`
+   option is also unsupported.
+
+Rather than maintaining platform-specific isolation logic, `--read-only` was removed
+entirely. The remaining controls are sufficient:
+
+- **Volume mounts** are the real isolation boundary — only the worktree and auth directory
+  are accessible from the host. Writes to the container's root filesystem cannot reach the
+  host.
+- **`--cap-drop ALL`** prevents privileged operations (mounting filesystems, changing
+  ownership of root-owned files, binding privileged ports).
+- **`--rm`** makes the container ephemeral — any modifications to the root filesystem
+  (e.g., a compromised process replacing system binaries) vanish when the container exits.
+- **`--security-opt no-new-privileges`** prevents setuid escalation.
+
+The `--read-only` flag was defense-in-depth against in-session persistence attacks, which
+are already mitigated by ephemeral containers.
 
 ## Known Limitations
 

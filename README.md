@@ -21,7 +21,7 @@ mkdir -p ~/.claude-sandbox/auth
 cp .env.example .env
 
 # Authenticate (first time only — opens browser)
-tools/run-claude-sandbox.sh
+tools/run-claude-sandbox.sh --host-network
 ```
 
 ## Workflow

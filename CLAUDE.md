@@ -215,7 +215,7 @@ tools/run-claude-sandbox.sh --task "Read .claude/skills/agentic-scaffold/SKILL.m
 
 containers/
   claude-sandbox/
-    Containerfile      # Hardened container (read-only, pids-limit, no network)
+    Containerfile      # Hardened container (cap-drop ALL, pids-limit, no network)
 
 tools/
   run-claude-sandbox.sh      # Podman sandbox wrapper
