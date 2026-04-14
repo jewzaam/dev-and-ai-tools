@@ -8,6 +8,14 @@
 
 set -euo pipefail
 
+# ── Plugin root (written by agentic-scaffold) ────────────────
+PLUGIN_ROOT="__PLUGIN_ROOT__"
+if [ ! -d "$PLUGIN_ROOT" ]; then
+  echo "Plugin root not found: $PLUGIN_ROOT" >&2
+  echo "Re-run /agentic-scaffold to regenerate loop.sh" >&2
+  exit 1
+fi
+
 # ── Parse arguments ───────────────────────────────────────────
 MODEL_OVERRIDE=""
 if [ "${1:-}" = "--model" ] && [ -n "${2:-}" ]; then
@@ -68,7 +76,7 @@ while true; do
   echo "════════════════════════════════════════════════"
   echo ""
 
-  SANDBOX_CMD=(tools/run-claude-sandbox.sh --task-file tasks/RUN.md --model "$STAGE_MODEL")
+  SANDBOX_CMD=("${PLUGIN_ROOT}/tools/run-claude-sandbox.sh" --task-file tasks/RUN.md --model "$STAGE_MODEL")
 
   "${SANDBOX_CMD[@]}" </dev/null || true
 
@@ -86,8 +94,8 @@ while true; do
     break
   fi
 
-  # Check for BLOCKED
-  if grep -q '\[BLOCKED\]' tasks/TASK_LIST.md; then
+  # Check for BLOCKED — match only actual markers (- [BLOCKED]), not instruction text
+  if grep -q '^- \[BLOCKED\]' tasks/TASK_LIST.md; then
     echo ""
     echo "Task blocked after max retries — human intervention required."
     echo "Check tasks/TASK_LIST.md for [BLOCKED] entries."

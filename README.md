@@ -32,16 +32,16 @@ Create `docs/requirements.md` describing what to build.
 
 ### 2. Generate Architecture and Tasks
 
-```bash
-tools/run-claude-sandbox.sh --task "Read .claude/skills/project-bootstrap/SKILL.md and bootstrap from docs/requirements.md"
+```
+/project-bootstrap docs/requirements.md
 ```
 
 Produces `docs/ARCHITECTURE.md` and `docs/TASKS.md`. Review and correct before proceeding.
 
 ### 3. Scaffold the Agentic Workflow
 
-```bash
-tools/run-claude-sandbox.sh --task "Read .claude/skills/agentic-scaffold/SKILL.md and scaffold from docs/TASKS.md and docs/ARCHITECTURE.md"
+```
+/agentic-scaffold docs/TASKS.md docs/ARCHITECTURE.md
 ```
 
 Creates task specs, personas, `orchestrator.yaml`, and `loop.sh`.

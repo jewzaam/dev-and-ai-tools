@@ -141,7 +141,7 @@ Next step:
   Review both documents and make any corrections.
   Then run the agentic scaffold skill:
 
-  tools/run-claude-sandbox.sh --task "Read .claude/skills/agentic-scaffold/SKILL.md and scaffold this project from docs/TASKS.md"
+  /agentic-scaffold docs/TASKS.md docs/ARCHITECTURE.md
 ```
 
 ## Quality Rules

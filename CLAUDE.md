@@ -13,7 +13,7 @@ This repository is packaged as the **agentic-orchestrator** Claude Code plugin (
 
 The plugin bundles skills, personas, templates, and container tooling:
 - `.claude-plugin/plugin.json` — Plugin manifest (name, version, author)
-- `.claude/skills/` — Three skills: project-bootstrap, agentic-scaffold, agentic-loop
+- `skills/` — Three skills: project-bootstrap, agentic-scaffold, agentic-loop
 - `.claude/personas/` — Four personas: developer, test_writer, reviewer, judge
 - `.claude/templates/` — Templates copied per-project by agentic-scaffold
 - `tools/` — Sandbox script and validation script
@@ -135,7 +135,7 @@ tools/run-claude-sandbox.sh --task-file tasks/RUN.md
 
 ## Available Skills
 
-The repository includes three custom skills in `.claude/skills/`:
+The repository includes three custom skills in `skills/`:
 
 ### 1. project-bootstrap
 
@@ -149,9 +149,9 @@ The repository includes three custom skills in `.claude/skills/`:
 - `docs/ARCHITECTURE.md` — Complete technical design with tech stack, data models, API design, deployment architecture
 - `docs/TASKS.md` — Ordered task breakdown with phases, descriptions, acceptance criteria, and verify scopes
 
-**Usage**:
-```bash
-tools/run-claude-sandbox.sh --task "Read .claude/skills/project-bootstrap/SKILL.md and bootstrap from docs/requirements.md"
+**Usage** (as plugin slash command):
+```
+/project-bootstrap docs/requirements.md
 ```
 
 ### 2. agentic-scaffold
@@ -172,9 +172,9 @@ tools/run-claude-sandbox.sh --task "Read .claude/skills/project-bootstrap/SKILL.
 - `tasks/RUN.md`, `tasks/BUILD_STATUS.md` — Execution control files
 - `loop.sh` — Executable loop script
 
-**Usage**:
-```bash
-tools/run-claude-sandbox.sh --task "Read .claude/skills/agentic-scaffold/SKILL.md and scaffold from docs/TASKS.md and docs/ARCHITECTURE.md"
+**Usage** (as plugin slash command):
+```
+/agentic-scaffold docs/TASKS.md docs/ARCHITECTURE.md
 ```
 
 ### 3. deploy-update
@@ -202,16 +202,17 @@ tools/run-claude-sandbox.sh --task "Read .claude/skills/agentic-scaffold/SKILL.m
     judge.md           # 6-dimension scoring, mandated_fixes, complexity, feedback
     reviewer.md        # Produces findings for judge to triage
     test_writer.md     # TDD mode: writes tests before implementation
-  skills/              # Custom Claude Code skills
-    agentic-loop/      # Run the orchestration loop
-    agentic-scaffold/  # Generate task infrastructure from ARCHITECTURE + TASKS
-    project-bootstrap/ # Generate ARCHITECTURE + TASKS from requirements
   templates/           # Templates copied per-project by agentic-scaffold
     BUILD_STATUS.md
     RUN.md
     TASK_LIST.md       # Supports TDD and standard workflow modes
     loop.sh            # Per-stage model routing from orchestrator.yaml
     orchestrator.yaml  # Per-project workflow configuration
+
+skills/                  # Plugin skills (loaded by --plugin-dir or claude plugin add)
+  agentic-loop/          # Run the orchestration loop
+  agentic-scaffold/      # Generate task infrastructure from ARCHITECTURE + TASKS
+  project-bootstrap/     # Generate ARCHITECTURE + TASKS from requirements
 
 containers/
   claude-sandbox/

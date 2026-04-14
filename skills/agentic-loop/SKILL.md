@@ -17,9 +17,10 @@ the task infrastructure.
 
 ### Step 1 — Validate Prerequisites
 
-Run the validation script:
-
-!`${CLAUDE_PLUGIN_ROOT}/<SOMETHING>/tools/validate-loop-prereqs.sh`
+Run the validation script using Bash:
+```bash
+${CLAUDE_PLUGIN_ROOT}/tools/validate-loop-prereqs.sh
+```
 
 If the script exits non-zero, stop and tell the user to run agentic-scaffold first.
 

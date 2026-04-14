@@ -74,7 +74,7 @@ Rules:
 
 ### Step 3 — TASK_LIST.md
 
-Copy the template from `.claude/templates/TASK_LIST.md`.
+Copy the template from `${CLAUDE_PLUGIN_ROOT}/.claude/templates/TASK_LIST.md`.
 
 Replace the example task entries with real entries from {tasks_file}.
 The entry format depends on the workflow mode in `orchestrator.yaml`.
@@ -88,7 +88,7 @@ TEST, DEV, REVIEW, JUDGE, VERIFY
 **Standard mode** (`test_first = false`) — each task gets entries in this order:
 DEV, REVIEW, JUDGE, TEST, VERIFY
 
-Use the entry patterns from `.claude/templates/TASK_LIST.md` for the selected mode.
+Use the entry patterns from `${CLAUDE_PLUGIN_ROOT}/.claude/templates/TASK_LIST.md` for the selected mode.
 Substitute task IDs, titles, verify commands, and cursor targets for each task.
 
 The key differences from the old format:
@@ -120,10 +120,10 @@ Insert all task entries between the header and the FINAL JUDGE section.
 ### Step 4 — Persona Files
 
 Copy the four persona files verbatim from templates:
-- `.claude/personas/developer.md` → `tasks/personas/developer.md`
-- `.claude/personas/test_writer.md` → `tasks/personas/test_writer.md`
-- `.claude/personas/reviewer.md` → `tasks/personas/reviewer.md`
-- `.claude/personas/judge.md` → `tasks/personas/judge.md`
+- `${CLAUDE_PLUGIN_ROOT}/.claude/personas/developer.md` → `tasks/personas/developer.md`
+- `${CLAUDE_PLUGIN_ROOT}/.claude/personas/test_writer.md` → `tasks/personas/test_writer.md`
+- `${CLAUDE_PLUGIN_ROOT}/.claude/personas/reviewer.md` → `tasks/personas/reviewer.md`
+- `${CLAUDE_PLUGIN_ROOT}/.claude/personas/judge.md` → `tasks/personas/judge.md`
 
 Do not modify persona file content.
 
@@ -132,13 +132,15 @@ Do not modify persona file content.
 ### Step 5 — Execution Files
 
 Copy these files verbatim:
-- `.claude/templates/RUN.md` → `tasks/RUN.md`
-- `.claude/templates/BUILD_STATUS.md` → `tasks/BUILD_STATUS.md`
-- `.claude/templates/loop.sh` → `loop.sh`
-- `.claude/templates/orchestrator.yaml` → `orchestrator.yaml`
+- `${CLAUDE_PLUGIN_ROOT}/.claude/templates/RUN.md` → `tasks/RUN.md`
+- `${CLAUDE_PLUGIN_ROOT}/.claude/templates/BUILD_STATUS.md` → `tasks/BUILD_STATUS.md`
+- `${CLAUDE_PLUGIN_ROOT}/.claude/templates/loop.sh` → `loop.sh`
+- `${CLAUDE_PLUGIN_ROOT}/.claude/templates/orchestrator.yaml` → `orchestrator.yaml`
 
-Make loop.sh executable:
+After copying `loop.sh`, replace the placeholder `__PLUGIN_ROOT__` with the
+actual resolved `${CLAUDE_PLUGIN_ROOT}` path:
 ```bash
+sed -i "s|__PLUGIN_ROOT__|${CLAUDE_PLUGIN_ROOT}|g" loop.sh
 chmod +x loop.sh
 ```
 
@@ -184,11 +186,8 @@ Config:         orchestrator.yaml
 Arch ref:       tasks/ARCHITECTURE_REF.md
 Execution:      tasks/RUN.md, tasks/BUILD_STATUS.md, loop.sh
 
-To run one step at a time:
-  tools/run-claude-sandbox.sh --task-file tasks/RUN.md
-
-To run automatically until complete or blocked:
-  ./loop.sh
+Next step:
+  /agentic-loop
 ```
 
 ### Step 8 — Transient Artifact Gitignore

@@ -88,7 +88,8 @@ Configuration: `orchestrator.yaml`
   - Do NOT check this box
   - Uncheck DEV and REVIEW above (they must be redone)
   - Increment attempt numbers on DEV, REVIEW, JUDGE by 1
-  - If any attempt number would exceed 3: replace checkbox with `[BLOCKED]` and stop
+  - If any attempt number would exceed 3: replace checkbox with `[BLOCKED]` and stop.
+    Example: `- [ ] **JUDGE**` becomes `- [BLOCKED] **JUDGE**`
   - Update the feedback reference on DEV: replace `_(none yet)_` with path to verdict file
     and list the mandated_fixes from the verdict
   - Set cursor to: `→ NEXT: Task 0.1 — DEV`
@@ -104,7 +105,8 @@ Configuration: `orchestrator.yaml`
   - Do NOT check this box
   - Uncheck DEV and REVIEW above (they must be redone)
   - Increment attempt numbers on DEV, REVIEW, VERIFY by 1
-  - If attempt number would exceed 3: replace checkbox with `[BLOCKED]` and stop
+  - If attempt number would exceed 3: replace checkbox with `[BLOCKED]` and stop.
+    Example: `- [ ] **VERIFY**` becomes `- [BLOCKED] **VERIFY**`
   - Set cursor to: `→ NEXT: Task 0.1 — DEV`
 
 ---

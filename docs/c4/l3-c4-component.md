@@ -56,7 +56,7 @@ flowchart LR
 flowchart LR
     classDef component fill:#85bbf0,color:#000,stroke:#78a8d8
 
-    subgraph skills["Skills - .claude/skills/"]
+    subgraph skills["Skills - skills/"]
         bootstrap["project-bootstrap<br/><i>Input: requirements.md<br/>Output: ARCHITECTURE.md<br/>+ TASKS.md</i>"]:::component
         scaffold["agentic-scaffold<br/><i>Input: ARCHITECTURE.md<br/>+ TASKS.md<br/>Output: task specs, personas,<br/>orchestrator.yaml, loop.sh</i>"]:::component
         aloop["agentic-loop<br/><i>Runs validate script,<br/>displays config,<br/>executes loop.sh,<br/>reports results</i>"]:::component
