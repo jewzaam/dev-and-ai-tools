@@ -27,7 +27,7 @@ The repository provides `tools/run-claude-sandbox.sh`, a wrapper script that:
 - Runs Claude Code inside a Podman container with filesystem isolation
 - Mounts only the current worktree (Claude cannot access files outside the project)
 - Persists auth tokens in `~/.claude-sandbox/auth/` (isolated from host `~/.claude`)
-- Supports network isolation modes (unrestricted or isolated to podman-compose services)
+- Supports network modes: host (default), `--no-network` (offline), `--isolated` (compose services only)
 - Runs with `--dangerously-skip-permissions` inside the container for unattended automation
 - Resource limits: 4GB memory, 2 CPUs (configurable via environment variables)
 

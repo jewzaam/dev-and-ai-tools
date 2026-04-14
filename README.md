@@ -107,8 +107,8 @@ The Judge also reviews the Reviewer's output quality and collects feedback to `t
 The sandbox (`tools/run-claude-sandbox.sh`) runs Claude Code in a Podman container:
 
 - **Filesystem**: Only the worktree is mounted
-- **Network**: No network by default (`--host-network` for host access, `--isolated` for compose services only)
-- **Security**: `--cap-drop ALL`, `--no-new-privileges`, `--read-only`, `--pids-limit 256`
+- **Network**: Host network by default (`--no-network` for offline, `--isolated` for compose services only)
+- **Security**: `--cap-drop ALL`, `--no-new-privileges`, `--pids-limit 256`
 - **Resources**: 4GB memory, 2 CPUs (configurable via `.env`)
 
 ```bash
@@ -118,8 +118,8 @@ tools/run-claude-sandbox.sh
 # One-shot task
 tools/run-claude-sandbox.sh --task "implement pagination"
 
-# With host network access
-tools/run-claude-sandbox.sh --host-network --task "test API integration"
+# Offline command (no Claude API access)
+tools/run-claude-sandbox.sh --no-network --exec "make test"
 
 # Shell access for debugging
 tools/run-claude-sandbox.sh --shell

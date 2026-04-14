@@ -32,7 +32,7 @@ flowchart TD
     podman["Podman Runtime"]:::external
 
     dev -->|"./loop.sh"| loop
-    loop -->|"--host-network --task-file<br/>--model per stage"| sandbox
+    loop -->|"--task-file<br/>--model per stage"| sandbox
     sandbox -->|"podman run"| podman
     podman --> claude_cli
     claude_cli -->|"API calls"| anthropic

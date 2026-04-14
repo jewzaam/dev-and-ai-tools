@@ -43,8 +43,8 @@ flowchart TD
 ## Trust Boundary
 
 The Podman container is the trust boundary. Each stage invocation runs in a fresh container
-with `--cap-drop ALL`, `--security-opt no-new-privileges`, `--read-only`, `--pids-limit 256`,
-and `--network none` by default (loop.sh overrides with `--host-network` for API access).
+with `--cap-drop ALL`, `--security-opt no-new-privileges`, `--pids-limit 256`,
+and `--network host` by default (use `--no-network` for offline commands).
 The container mounts exactly two volumes: the project worktree (read-write) and Claude auth
 tokens (read-write). Claude Code runs with `--dangerously-skip-permissions` inside the
 container because the container itself is the permission boundary.

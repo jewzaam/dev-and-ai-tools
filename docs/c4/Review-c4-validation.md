@@ -18,20 +18,14 @@
 
 **Artifact:** behavioral-spec.md
 **Section:** 10 — Behavioral Nuances
-**Verdict:** DISCREPANCY
+**Verdict:** RESOLVED
 
-**Spec says:** Default network mode is `--network none` (run-claude-sandbox.sh:328).
-`loop.sh` invokes `run-claude-sandbox.sh` without a network flag (loop.sh:71).
+**Original issue:** Default network mode was `--network none`, blocking API access.
+`loop.sh` invoked `run-claude-sandbox.sh` without a network flag.
 
-**Code says:** `run-claude-sandbox.sh:328` sets `NETWORK_ARGS+=(--network none)` in the
-default branch. `loop.sh:71` constructs `SANDBOX_CMD=(tools/run-claude-sandbox.sh
---task-file tasks/RUN.md --model "$STAGE_MODEL")` with no network argument.
-
-**Evidence:** Direct read of `loop.sh:71` and `run-claude-sandbox.sh:326-329`.
-
-**Impact:** The agentic loop will fail on the first API call because the container has
-no network access. The developer must either add `--host-network` to the sandbox command
-in `loop.sh` or configure network access another way.
+**Resolution:** Default changed to `--network host`. `loop.sh` no longer needs an
+explicit network flag. The `--host-network` flag was removed; `--no-network` added
+as opt-in for offline commands.
 
 ## Important
 

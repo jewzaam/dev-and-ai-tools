@@ -24,7 +24,7 @@ flowchart TD
         orch_tpl["orchestrator.yaml<br/><i>Copied to project root</i>"]:::component
     end
 
-    loop -->|"Invokes with --host-network<br/>--task-file --model"| sandbox
+    loop -->|"Invokes with<br/>--task-file --model"| sandbox
     loop -->|"Reads model routing"| config
     validate -->|"Checks generated copies exist"| task_list_tpl
 ```
@@ -72,7 +72,7 @@ flowchart LR
 ┌──────────────────────────────────────────────────────────────────────┐
 │ loop.sh reads → NEXT: cursor from tasks/TASK_LIST.md                │
 │ loop.sh reads orchestrator.yaml → resolves model for stage          │
-│ loop.sh invokes run-claude-sandbox.sh --host-network                │
+│ loop.sh invokes run-claude-sandbox.sh                               │
 │                        --task-file tasks/RUN.md --model {model}     │
 └─────────────────────────────┬────────────────────────────────────────┘
                               │

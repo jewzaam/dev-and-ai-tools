@@ -45,7 +45,7 @@ no long-running processes. All state is in the filesystem.
 2. Loads all `.env` variables into the shell (`run-claude-sandbox.sh:204-212`)
 3. Locates Containerfile from 4 candidate paths (`run-claude-sandbox.sh:259-264`)
 4. Builds the Podman image if it does not exist (`run-claude-sandbox.sh:304-314`)
-5. Resolves network mode: `--network none` (default), `--network host` (if `--host-network`),
+5. Resolves network mode: `--network host` (default), `--network none` (if `--no-network`),
    or project compose network (if `--isolated`) (`run-claude-sandbox.sh:319-331`)
 6. Constructs the `claude` CLI command with `--dangerously-skip-permissions`, `-p` (task),
    `--model`, and optional flags (`run-claude-sandbox.sh:337-376`)
@@ -264,19 +264,15 @@ image rebuilds.
 | Xenon | Not installed | Judge notes "complexity check skipped — xenon not available" and scores Dimension 6 using lines-of-code assessment instead (judge.md Dimension 6 note). |
 | .env file | Missing | `run-claude-sandbox.sh` exits with "No .env file found" (line 197). |
 | orchestrator.yaml | Missing | `loop.sh` uses defaults: sonnet for dev/test/review, opus for judge (loop.sh:20-30 `read_yaml` returns default parameter). |
-| Network | --network none blocks API | Claude Code CLI inside the container cannot reach Anthropic API. Container exits non-zero. This is a misconfiguration — `--host-network` is needed for API access. |
+| Network | --no-network blocks API | Claude Code CLI inside the container cannot reach Anthropic API. Container exits non-zero. Only use `--no-network` for offline commands (e.g., `--exec "make test"`). |
 
 ## 10. Behavioral Nuances
 
-### Network Default Changed
+### Network Default
 
-The default network mode for `run-claude-sandbox.sh` is `--network none`
-(`run-claude-sandbox.sh:328`), not `--network host` as in the original upstream repo.
-This means containers cannot reach external services by default.
-
-`loop.sh` passes `--host-network` explicitly (`loop.sh:71`) so the agentic loop has
-API access. Interactive and one-shot sandbox invocations still default to no network —
-the developer must pass `--host-network` if API access is needed outside the loop.
+The default network mode for `run-claude-sandbox.sh` is `--network host`, giving
+containers full host network access (required for Claude Code to reach the Anthropic API).
+Use `--no-network` for offline commands or `--isolated` for compose-service-only access.
 
 ### Loop Does Not Exit on Stuck State
 
