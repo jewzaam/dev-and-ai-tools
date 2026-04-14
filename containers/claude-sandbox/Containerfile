@@ -35,8 +35,15 @@ RUN npm install -g @anthropic-ai/claude-code
 RUN mkdir -p /workspace && \
     chown -R node:node /workspace /home/node
 
+# Entrypoint: symlink ~/.claude.json into the persistent auth volume so
+# onboarding state (theme, first-run flags) survives container restarts.
+# The auth volume is mounted at /home/node/.claude by run-claude-sandbox.sh.
+COPY --chmod=755 containers/claude-sandbox/entrypoint.sh /usr/local/bin/entrypoint.sh
+
 # Set working directory — the worktree will be mounted here
 WORKDIR /workspace
 
 # Switch to non-root user
 USER node
+
+ENTRYPOINT ["entrypoint.sh"]

@@ -315,7 +315,7 @@ Each stage runs inside a hardened Podman container. The container is the securit
 | Capabilities | `--cap-drop ALL` |
 | Privilege escalation | `--security-opt no-new-privileges` |
 | Processes | `--pids-limit 256` |
-| Network | `--network none` default; `loop.sh` passes `--host-network` for API access |
+| Network | `--network host` default; `--no-network` or `--isolated` for restricted access |
 | Volumes | Worktree (rw) + auth tokens (rw) only |
 | Container lifecycle | `--rm` (ephemeral, no state persists in the container) |
 

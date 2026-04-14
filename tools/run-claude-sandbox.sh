@@ -21,7 +21,8 @@
 #   --model <model>                      Claude model to use (sonnet|opus|haiku)
 #
 # NETWORK:
-#   (no flag)                  Unrestricted: can reach all local services
+#   (no flag)                  Host network: full access (required for Claude API)
+#   --no-network               No network access (for offline commands via --exec)
 #   --isolated                 Restricted: only this worktree's podman-compose services
 #
 # EXAMPLES:
@@ -35,6 +36,7 @@
 #   tools/run-claude-sandbox.sh --task "..." --append-system-prompt-file tasks/AGENT_CONTEXT.md
 #   tools/run-claude-sandbox.sh --shell
 #   tools/run-claude-sandbox.sh --exec "make test"
+#   tools/run-claude-sandbox.sh --no-network --exec "make test"
 #   tools/run-claude-sandbox.sh --isolated --task "fix the flaky test in test_jobs.py"
 #
 # CONFIGURATION (environment variable overrides):
@@ -86,7 +88,7 @@ die()     { error "$1"; exit 1; }
 
 # ── Argument parsing ───────────────────────────────────────────────────────────
 ISOLATED=false
-HOST_NETWORK=false
+NO_NETWORK=false
 MODE="interactive"
 TASK=""
 TASK_FILE=""
@@ -103,8 +105,8 @@ while [ $# -gt 0 ]; do
             ISOLATED=true
             shift
             ;;
-        --host-network)
-            HOST_NETWORK=true
+        --no-network)
+            NO_NETWORK=true
             shift
             ;;
         --task)
@@ -321,9 +323,9 @@ fi
 # ── Network configuration ──────────────────────────────────────────────────────
 NETWORK_ARGS=()
 
-if [ "$HOST_NETWORK" = true ]; then
-    NETWORK_ARGS+=(--network host)
-    info "Host network mode: full host network access"
+if [ "$NO_NETWORK" = true ]; then
+    NETWORK_ARGS+=(--network none)
+    info "No network mode: fully isolated"
 elif [ "$ISOLATED" = true ]; then
     COMPOSE_NETWORK="${PODMAN_PROJECT}_default"
     if ! podman network exists "$COMPOSE_NETWORK" 2>/dev/null; then
@@ -333,8 +335,8 @@ elif [ "$ISOLATED" = true ]; then
     info "Isolated mode: connected to network '$COMPOSE_NETWORK'"
     info "  Services reachable by container name on this network"
 else
-    NETWORK_ARGS+=(--network none)
-    info "Default mode: no network access (use --host-network for host access)"
+    NETWORK_ARGS+=(--network host)
+    info "Host network mode: full access (Claude API, local services)"
 fi
 
 # ── Determine container command ────────────────────────────────────────────────

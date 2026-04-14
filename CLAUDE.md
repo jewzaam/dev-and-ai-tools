@@ -94,13 +94,13 @@ tools/run-claude-sandbox.sh --resume abc123def456
 tools/run-claude-sandbox.sh --resume
 ```
 
-**Network isolation**:
+**Network modes**:
 ```bash
-# No network (default) — fully isolated:
+# Host network (default) — full access for Claude API + local services:
 tools/run-claude-sandbox.sh --task "..."
 
-# Host network — can reach localhost:8000, localhost:5432, etc:
-tools/run-claude-sandbox.sh --host-network --task "..."
+# No network — for offline commands only (Claude API won't work):
+tools/run-claude-sandbox.sh --no-network --exec "make test"
 
 # Isolated — can only reach project's podman-compose services:
 tools/run-claude-sandbox.sh --isolated --task "..."
